@@ -2,10 +2,13 @@ import {
     Box,
     Button,
     Container,
+    Typography
 } from '@mui/material'
 import { useAppDispatch, useAppSelector } from '@/stores/Hooks';
 import { getUsers, deleteUser, selectUsers, UserProps } from '@/stores/features/users/userReducers';
 import { useEffect, useMemo, useState } from 'react';
+import { Add } from '@mui/icons-material';
+import { FormUser } from '@/components/FormUser';
 import { styled } from '@mui/material/styles';
 import Table from '@mui/material/Table';
 import TableBody from '@mui/material/TableBody';
@@ -38,6 +41,10 @@ const StyledTableRow = styled(TableRow)(({ theme }) => ({
 export default function UserPages() {
     const dispatch = useAppDispatch();
     const { users, pending } = useAppSelector(selectUsers);
+
+    const [isOpenUpdate, setIsOpenUpdate] = useState<boolean>(false);
+    const [formValue, setFormValue] = useState<UserProps>({});
+    const [isOpenForm, setIsOpenForm] = useState<boolean>(false);
 
     const filters = useMemo(() => {
         const params = {}
@@ -93,6 +100,21 @@ export default function UserPages() {
                     justifyContent: 'space-between',
                 }}
             >
+                <Button
+                    variant="contained"
+                    sx={{
+                        mb: 2,
+                        display: "inline-flex",
+                        alignItems: 'center',
+                        gap: 1
+                    }}
+                    onClick={() => setIsOpenForm(true)}
+                >
+                    <Add />
+                    <Typography variant="body2">
+                        New user
+                    </Typography>
+                </Button>
             </Box>
             <TableContainer component={Paper}>
                 <Table sx={{ minWidth: 700 }} aria-label="customized table">
@@ -117,6 +139,19 @@ export default function UserPages() {
                                 <StyledTableCell align="left">{row.email}</StyledTableCell>
                                 <StyledTableCell align="left">{row.company.name}</StyledTableCell>
                                 <Button
+                                    sx={{
+                                        mr: 1,
+                                        mt: 1
+                                    }}
+                                    variant="contained"
+                                    onClick={() => {
+                                        setIsOpenUpdate(true)
+                                        setFormValue(row)
+                                    }}
+                                >
+                                    Edit
+                                </Button>
+                                <Button
                                     sx={{ mt: 1 }}
                                     variant="outlined"
                                     disabled={pending}
@@ -124,11 +159,28 @@ export default function UserPages() {
                                 >
                                     Delete
                                 </Button>
+
+                                <FormUser
+                                    isOpen={isOpenUpdate}
+                                    onClose={() => {
+                                        setIsOpenUpdate(false)
+                                        setFormValue({});
+                                    }}
+                                    user={formValue}
+                                    isUpdate
+                                />
                             </StyledTableRow>
                         ))}
                     </TableBody>
                 </Table>
             </TableContainer>
+
+            <FormUser
+                isOpen={isOpenForm}
+                onClose={() => {
+                    setIsOpenForm(false)
+                }}
+            />
             <SnackbarAlert
                 isAlert='success'
                 isOpen={isOpenAlert}
