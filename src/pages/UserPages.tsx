@@ -1,7 +1,7 @@
 import {
     Box,
     Button,
-    Container
+    Container,
 } from '@mui/material'
 import { useAppDispatch, useAppSelector } from '@/stores/Hooks';
 import { getUsers, deleteUser, selectUsers, UserProps } from '@/stores/features/users/userReducers';
@@ -14,6 +14,7 @@ import TableContainer from '@mui/material/TableContainer';
 import TableHead from '@mui/material/TableHead';
 import TableRow from '@mui/material/TableRow';
 import Paper from '@mui/material/Paper';
+import { SnackbarAlert } from '../components/SnackbarAlert';
 
 const StyledTableCell = styled(TableCell)(({ theme }) => ({
     [`&.${tableCellClasses.head}`]: {
@@ -61,6 +62,11 @@ export default function UserPages() {
 
     const [isOpenAlert, setIsOpenAlert] = useState<boolean>(false);
     const [isMessage, setIsMessage] = useState<string>("");
+
+    const handleCloseAlert = () => {
+        setIsMessage("");
+        setIsOpenAlert(false);
+    }
 
     const onDeleteUser = (id?: number | string) => {
         if (!id) return;
@@ -123,6 +129,12 @@ export default function UserPages() {
                     </TableBody>
                 </Table>
             </TableContainer>
+            <SnackbarAlert
+                isAlert='success'
+                isOpen={isOpenAlert}
+                handleClose={handleCloseAlert}
+                children={isMessage}
+            />
         </Container>
     );
 }
