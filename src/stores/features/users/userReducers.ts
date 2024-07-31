@@ -135,6 +135,31 @@ export const createUser = createAsyncThunk<any, UserActionProps, { state: RootSt
     }
 );
 
+export const updateUser = createAsyncThunk<any, UserActionProps, { state: RootState }>(
+    "update-user",
+    async (formData) => {
+        try {
+            const response = await axios.patch(`${prefix}/${formData?.id}`, formData.data, config);
+            const { data, status } = response;
+            if (status == 200) {
+                await formData.isSuccess();
+                return data;
+            } else {
+                throw response;
+            }
+        } catch (error: any) {
+            const { data, status } = error.response;
+            const newError: any = { message: data?.error?.message };
+            await formData.isError(newError);
+            if (status === 404) {
+                throw new Error("User not found");
+            } else {
+                throw new Error(newError.message);
+            }
+        }
+    }
+);
+
 export const userSlice = createSlice({
     name: "users",
     initialState,
@@ -184,6 +209,32 @@ export const userSlice = createSlice({
                 };
             })
             .addCase(createUser.rejected, (state, { error }) => {
+                state.pending = false;
+                state.error = true;
+                state.message = error.message;
+            })
+
+            .addCase(updateUser.pending, (state) => {
+                return {
+                    ...state,
+                    pending: true,
+                };
+            })
+            .addCase(updateUser.fulfilled, (state, { payload }) => {
+                const updatedUsers = state.users.map((user) => {
+                    if (user?.id === payload?.id) {
+                        user = payload
+                    }
+                    return user;
+                });
+                return {
+                    ...state,
+                    pending: false,
+                    error: false,
+                    users: updatedUsers,
+                };
+            })
+            .addCase(updateUser.rejected, (state, { error }) => {
                 state.pending = false;
                 state.error = true;
                 state.message = error.message;
