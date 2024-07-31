@@ -10,7 +10,6 @@ import {
 import { createUser, selectUsers, updateUser, UserProps } from '@/stores/features/users/userReducers';
 import ModalComponent from '@/components/ModalComponent';
 import { Controller, useForm } from 'react-hook-form';
-import 'react-international-phone/style.css';
 import { Close } from '@mui/icons-material';
 import { useAppDispatch, useAppSelector } from '@/stores/Hooks';
 import { SnackbarAlert } from './SnackbarAlert';
@@ -80,7 +79,7 @@ export const FormUser: FC<Props> = ({ isOpen, onClose, user, isUpdate }) => {
 
     const onSubmit = (item: UserProps) => {
         if (!isUpdate) {
-            dispatch(createUser({˝
+            dispatch(createUser({
                 data: item,
                 isError: async (error) => {
                     console.log(error)
