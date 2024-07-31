@@ -110,6 +110,31 @@ export const getUsers = createAsyncThunk<any, AxiosRequestConfig, { state: RootS
     }
 );
 
+export const createUser = createAsyncThunk<any, UserActionProps, { state: RootState }>(
+    "create-user",
+    async (formData) => {
+        try {
+            const response = await axios.post(prefix, formData.data, config);
+            const { data, status } = response;
+            if (status == 201) {
+                await formData.isSuccess();
+                return data;
+            } else {
+                throw response;
+            }
+        } catch (error: any) {
+            const { data, status } = error.response;
+            const newError: any = { message: data?.error?.message };
+            await formData.isError(newError);
+            if (status === 404) {
+                throw new Error("User not found");
+            } else {
+                throw new Error(newError.message);
+            }
+        }
+    }
+);
+
 export const userSlice = createSlice({
     name: "users",
     initialState,
@@ -139,6 +164,26 @@ export const userSlice = createSlice({
                 };
             })
             .addCase(getUsers.rejected, (state, { error }) => {
+                state.pending = false;
+                state.error = true;
+                state.message = error.message;
+            })
+
+            .addCase(createUser.pending, (state) => {
+                return {
+                    ...state,
+                    pending: true,
+                };
+            })
+            .addCase(createUser.fulfilled, (state, { payload }) => {
+                return {
+                    ...state,
+                    pending: false,
+                    error: false,
+                    users: [...state.users, payload],
+                };
+            })
+            .addCase(createUser.rejected, (state, { error }) => {
                 state.pending = false;
                 state.error = true;
                 state.message = error.message;
