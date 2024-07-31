@@ -160,6 +160,32 @@ export const updateUser = createAsyncThunk<any, UserActionProps, { state: RootSt
     }
 );
 
+export const deleteUser = createAsyncThunk<any, UserActionProps, { state: RootState }>(
+    "delete-user",
+    async (formData) => {
+        try {
+            const response = await axios.delete(`${prefix}/${formData?.id}`, config);
+            const { status } = response;
+            console.log(response, 'result-delete');
+            if (status == 200) {
+                await formData.isSuccess();
+                return formData?.id;
+            } else {
+                throw response;
+            }
+        } catch (error: any) {
+            const { data, status } = error.response;
+            const newError: any = { message: data?.error?.message };
+            await formData.isError(newError);
+            if (status === 404) {
+                throw new Error("User not found");
+            } else {
+                throw new Error(newError.message);
+            }
+        }
+    }
+);
+
 export const userSlice = createSlice({
     name: "users",
     initialState,
@@ -235,6 +261,29 @@ export const userSlice = createSlice({
                 };
             })
             .addCase(updateUser.rejected, (state, { error }) => {
+                state.pending = false;
+                state.error = true;
+                state.message = error.message;
+            })
+
+            .addCase(deleteUser.pending, (state) => {
+                return {
+                    ...state,
+                    pending: true,
+                };
+            })
+            .addCase(deleteUser.fulfilled, (state, { payload }) => {
+                const updatedUsers = state.users.filter((user) => {
+                    return user.id !== payload;
+                });
+                return {
+                    ...state,
+                    pending: false,
+                    error: false,
+                    users: updatedUsers,
+                };
+            })
+            .addCase(deleteUser.rejected, (state, { error }) => {
                 state.pending = false;
                 state.error = true;
                 state.message = error.message;
